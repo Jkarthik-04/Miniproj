@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Three-Section Page</title>
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+        }
+        .menu {
+            width: 20%;
+            background: #333;
+            color: white;
+            padding: 20px;
+			padding-top: 47px;
+        }
+        .menu div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid white;
+        }
+        .menu div:hover {
+            background: #555;
+        }
+        .content {
+            display: flex;
+            width: 80%;
+        }
+        .section {
+            width: 50%;
+            padding: 20px;
+            border-left: 1px solid #ddd;
+        }
+		.task-list {
+            margin-top: 20px;
+        }
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="menu" id="menu">
+        <div onclick="changeContent('jan.html')">January</div>
+        <div onclick="changeContent('about')">About</div>
+        <div onclick="changeContent('services')">Services</div>
+    </div>
+    <div class="content">
+        <div id="section1" class="section">
+            <div id="calendarSection">
+                <iframe id="calendarFrame" src="jan.html" width="100%" height="500px" style="border: none;"></iframe>
+            </div>
+
+        </div>
+        <div id="section2" class="section">
+            <h2>Details</h2>
+            <p id="selected-info">Select a date to see details.</p>
+            <h3>Tasks</h3>
+            <input type="text" id="taskInput" placeholder="Enter a task">
+            <input type="time" id="taskTime">
+            <button onclick="addTask()">Add Task</button>
+            <ul id="taskList" class="task-list"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+	let selectedDate = '';
+    let tasks = {};
+
+    function changeContent(option) {
+        document.getElementById("calendarFrame").src = option;
+    }
+
+    window.addEventListener('message', function(event) {
+        if (event.data.startsWith('Selected Date:')) {
+            selectedDate = event.data.replace('Selected Date: ', '');
+            document.getElementById('selected-info').innerText = event.data;
+            loadTasks();
+        }
+    });
+
+    function addTask() {
+        if (!selectedDate) return alert("Select a date first!");
+        let taskInput = document.getElementById("taskInput").value;
+        let taskTime = document.getElementById("taskTime").value;
+        if (taskInput.trim() === "" || taskTime.trim() === "") return alert("Please enter both task and time.");
+
+        if (!tasks[selectedDate]) tasks[selectedDate] = [];
+        tasks[selectedDate].push([taskTime, taskInput]);
+        document.getElementById("taskInput").value = "";
+        document.getElementById("taskTime").value = "";
+        loadTasks();
+    }
+
+    function loadTasks() {
+        let taskList = document.getElementById("taskList");
+        taskList.innerHTML = "";
+        if (!tasks[selectedDate]) return;
+        
+        for (let i = 0; i < tasks[selectedDate].length; i++) {
+            let taskItem = document.createElement("li");
+            taskItem.classList.add("task-item");
+            taskItem.innerHTML = `${tasks[selectedDate][i][0]} - ${tasks[selectedDate][i][1]} <button onclick="removeTask(${i})">Delete</button>`;
+            taskList.appendChild(taskItem);
+        }
+    }
+
+    function removeTask(index) {
+        if (!tasks[selectedDate]) return;
+        tasks[selectedDate].splice(index, 1);
+        loadTasks();
+    }
+</script>
+
+
+</body>
+</html>
