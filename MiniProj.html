@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Calender</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        .nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #444;
+            color: white;
+            padding: 15px 20px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+        }
+        .nav a:hover {
+            background: #666;
+            border-radius: 5px;
+        }
+		.logo{
+			margin-right:auto;
+		}
+        .container {
+			height: 100vh;
+            display: flex;
+            width: 100%;
+        }
+        .todo {
+            width: 30%;
+            background: #333;
+            color: white;
+            padding: 20px;
+            padding-top: 47px;
+        }
+        .todo div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid white;
+        }
+        .op:hover {
+            background: #555;
+        }
+		.not:hover {
+            background: #333;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+        }
+		.month-details {
+            display: flex;
+            flex-direction: row;
+            width: 110%;
+        }
+        .month-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            padding: 10px 0;
+            overflow: hidden;
+        }
+        .month-wrapper {
+            display: flex;
+            justify-content: center;
+            transition: transform 0.5s ease-in-out;
+            width: 150px;
+        }
+        .month-display {
+            font-size: 24px;
+            font-weight: bold;
+            min-width: 150px;
+            text-align: center;
+        }
+        .month-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 5px;
+            transition: background 0.3s;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .month-btn:hover {
+            background: #555;
+        }
+        .month-btn.prev {
+            left: 250px;
+        }
+        .month-btn.next {
+            right: 250px;
+        }
+        .section {
+            width: 100%;
+            padding: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .task-list {
+            margin-top: 20px;
+        }
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+		.task-item {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 8px;
+			border-bottom: 1px solid #ddd;
+		}
+		.task-item button {
+			background: red;
+			color: white;
+			border: none;
+			padding: 5px 10px;
+			cursor: pointer;
+			border-radius: 3px;
+		}
+		.task-item button:hover {
+			background: darkred;
+		}
+
+    </style>
+</head>
+<body>
+<div class="nav">
+    <div class="logo"><strong>Smart Calendar</strong></div>
+    <div>
+        <a href="">Calendar</a>
+        <a href="">About</a>	
+    </div>
+</div>
+<div class="container">
+    <div class="todo" id="todo">
+		<div class="not"><h2>To Do:</h2></div>
+		<div class="not"><h2>Dues:</h2></div>
+    </div>
+    <div class="content">
+        <div class="month-container">
+            <button class="month-btn prev" onclick="prevMonth()">&#10094; Prev</button>
+            <div class="month-wrapper">
+                <div class="month-display" id="monthDisplay">January</div>
+            </div>
+            <button class="month-btn next" onclick="nextMonth()">Next &#10095;</button>
+        </div>
+		<div class="month-details">
+			<div id="section1" class="section">
+				<div id="calendarSection">
+					<iframe id="calendarFrame" src="jan.html" width="100%" height="500px" style="border: none;"></iframe>
+				</div>
+			</div>
+
+			<div id="section2" class="section">
+				<h2>Details</h2>
+				<p id="selected-info">Select a date to see details.</p>
+				<h3>Tasks</h3>
+				<input type="text" id="taskInput" placeholder="Enter a task">
+				<input type="time" id="taskTime">
+				<button onclick="addTask()">Add Task</button>
+				<ul id="taskList" class="task-list"></ul>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+const months = ["Jan", "February", "March", "April", "May", "June","July", "August", "September", "October", "November", "December"];
+let currentMonthIndex = 0;
+let selectedDate = '';
+let tasks = JSON.parse(localStorage.getItem("tasks")) || {};
+
+function updateMonth() {
+    document.getElementById("monthDisplay").innerText = months[currentMonthIndex];
+    document.getElementById("calendarFrame").src = months[currentMonthIndex].toLowerCase() + ".html";
+}
+
+function prevMonth() {
+    currentMonthIndex = (currentMonthIndex === 0) ? 11 : currentMonthIndex - 1;
+    updateMonth();
+}
+
+function nextMonth() {
+    currentMonthIndex = (currentMonthIndex === 11) ? 0 : currentMonthIndex + 1;
+    updateMonth();
+}
+
+updateMonth();
+
+function changeContent(option) {
+    document.getElementById("calendarFrame").src = option;
+}
+
+window.addEventListener('message', function(event) {
+    if (event.data.startsWith('Selected Date:')) {
+        selectedDate = event.data.replace('Selected Date: ', '');
+        document.getElementById('selected-info').innerText = event.data;
+        loadTasks();
+    }
+});
+
+function addTask() {
+    if (!selectedDate) return alert("Select a date first!");
+    
+    let taskInput = document.getElementById("taskInput").value.trim();
+    let taskTime = document.getElementById("taskTime").value.trim();
+
+    if (!taskInput || !taskTime) return alert("Please enter both task and time.");
+
+    if (!tasks[selectedDate]) tasks[selectedDate] = [];
+
+    // Generate a unique ID for each task
+    let taskId = Date.now();
+
+    tasks[selectedDate].push({ id: taskId, time: taskTime, task: taskInput });
+
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+
+    document.getElementById("taskInput").value = "";
+    document.getElementById("taskTime").value = "";
+    loadTasks();
+}
+
+function loadTasks() {
+    let taskList = document.getElementById("taskList");
+    taskList.innerHTML = "";
+
+    if (!tasks[selectedDate]) return;
+
+    tasks[selectedDate].forEach((task, index) => {
+        let taskItem = document.createElement("li");
+        taskItem.classList.add("task-item");
+
+        taskItem.innerHTML = `
+            ${task.time} - ${task.task} 
+            <button onclick="removeTask(${task.id})">Delete</button>
+        `;
+
+        taskList.appendChild(taskItem);
+    });
+}
+
+
+function removeTask(taskId) {
+    if (!tasks[selectedDate]) return;
+
+    // Remove the specific task by filtering out the task with the matching ID
+    tasks[selectedDate] = tasks[selectedDate].filter(task => task.id !== taskId);
+
+    // Save updated tasks to localStorage
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    
+    // Refresh the displayed tasks
+    loadTasks();
+}
+
+
+</script>
+</body>
+</html>
